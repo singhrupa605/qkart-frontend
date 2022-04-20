@@ -127,6 +127,7 @@ const Register = () => {
     }
     return true;
   };
+  
   return (
     <Box
       display="flex"
