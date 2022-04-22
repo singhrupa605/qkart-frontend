@@ -7,8 +7,10 @@ import { config } from "../App";
 import Footer from "./Footer";
 import Header from "./Header";
 import "./Register.css";
+import { useHistory, Link } from "react-router-dom";
 
 const Register = () => {
+  const history = useHistory();
   const { enqueueSnackbar } = useSnackbar();
   const [isLoading, setLoading] = useState(false);
   const [userName, setUserName] = useState("");
@@ -21,7 +23,7 @@ const Register = () => {
   };
 
   // Function to delay registration to illustrate circular progress
-   function timeout(delay) {
+  function timeout(delay) {
     return new Promise((res) => setTimeout(res, delay));
 
     // TODO: CRIO_TASK_MODULE_REGISTER - Implement the register function
@@ -51,33 +53,35 @@ const Register = () => {
   const register = async (formData) => {
     setLoading(true);
     // await timeout(5000);
-    const resData = await axios
-      .post(`${config.endpoint}/auth/register`, {
-        username: formData.username,
-        password: formData.password,
-      })
-      .then((response) => {
-        setLoading(false);
-        console.log(response.status);
-        enqueueSnackbar("Registered Successfully", {
-          variant: "success",
-        });
-      })
-      .catch((error) => {
-        setLoading(false);
-        if (error.response.status === 400) {
-          enqueueSnackbar("Username is already taken", {
-            variant: "error",
+    try {
+      const resData = await axios
+        .post(`${config.endpoint}/auth/register`, {
+          username: formData.username,
+          password: formData.password,
+        })
+        .then((response) => {
+          setLoading(false);
+          console.log(response.status);
+          enqueueSnackbar("Registered Successfully", {
+            variant: "success",
           });
-        } else {
-          enqueueSnackbar(
-            "Something went wrong. Check that the backend is running, reachable and returns valid JSON",
-            {
+        })
+        .catch((error) => {
+          setLoading(false);
+          if (error.response.status === 400) {
+            enqueueSnackbar("Username is already taken", {
               variant: "error",
-            }
-          );
+            });
+          }
+        });
+    } catch (error) {
+      enqueueSnackbar(
+        "Something went wrong. Check that the backend is running, reachable and returns valid JSON",
+        {
+          variant: "error",
         }
-      });
+      );
+    }
   };
 
   // TODO: CRIO_TASK_MODULE_REGISTER - Implement user input validation logic
@@ -127,7 +131,7 @@ const Register = () => {
     }
     return true;
   };
-  
+
   return (
     <Box
       display="flex"
@@ -181,7 +185,8 @@ const Register = () => {
             onClick={() => {
               if (validateInput(userData)) {
                 register(userData);
-                console.log(userData);
+                history.push("/login", { from: "Register" });
+                // console.log(userData);
               }
             }}
           >
@@ -192,9 +197,9 @@ const Register = () => {
           )}
           <p className="secondary-action">
             Already have an account?{" "}
-            <a className="link" href="#">
+            <Link to="/login" className="link">
               Login here
-            </a>
+            </Link>
           </p>
         </Stack>
       </Box>

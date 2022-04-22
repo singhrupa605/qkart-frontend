@@ -14,19 +14,12 @@ import Footer from "./Footer";
 import Header from "./Header";
 import "./Products.css";
 
-
-
-const Products = () => {
-
-
-
-
-
-
+const Products = () => 
+{
 
   return (
     <div>
-      <Header>
+      <Header >
 
       </Header>
 
