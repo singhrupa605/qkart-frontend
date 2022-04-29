@@ -12,10 +12,6 @@ import { useHistory } from "react-router-dom";
 
 const Header = ({ children, hasHiddenAuthButtons }) => {
   let dataToRender = null;
-
-  const arr = [1,2,3];
-  let newArr = arr.slice();
-  console.log("Array " + newArr);
   const userData = localStorage.getItem("username");
   const history = useHistory();
   if (hasHiddenAuthButtons) {

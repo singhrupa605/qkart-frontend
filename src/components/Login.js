@@ -59,19 +59,20 @@ const Login = () => {
         })
         .then((response) => {
           setLoading(false);
-          if (response.status === 201) {
+          if (response.status === 201)
+           {
             const data = response.data;
             persistLogin(data.token, data.username, data.balance);
             enqueueSnackbar("Logged in successfully", {
               variant: "success",
             });
+            history.push("/", { from: "Login" });
           }
         })
         .catch((error) => {
           setLoading(false);
           if (error.response.status === 400) {
-            // console.log(error.response);
-            enqueueSnackbar("Password is incorrect", {
+            enqueueSnackbar(error.response.data.message, {
               variant: "error",
             });
           }
@@ -101,7 +102,8 @@ const Login = () => {
    * -    Check that username field is not an empty value - "Username is a required field"
    * -    Check that password field is not an empty value - "Password is a required field"
    */
-  const validateInput = (data) => {
+  const validateInput = (data) => 
+  {
     if (data.username.length === 0) {
       enqueueSnackbar("Username is a required field", {
         variant: "error",
@@ -172,11 +174,11 @@ const Login = () => {
             className="button"
             variant="contained"
             onClick={() => {
-              if (validateInput(userData)) {
+              if (validateInput(userData)) 
+              {
                 login(userData);
               }
-              history.push("/", { from: "Login" });
-              window.location.reload();
+              
             }}
           >
             LOGIN TO QKART

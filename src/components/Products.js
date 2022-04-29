@@ -15,6 +15,7 @@ import Footer from "./Footer";
 import Header from "./Header";
 import "./Products.css";
 import ProductCard from "./ProductCard";
+import Cart, { generateCartItemsFrom } from "./Cart";
 
 // Definition of Data Structures used
 /**
@@ -32,8 +33,10 @@ const Products = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [isLoading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
-  const [noDataIcon, setDataIcon] = useState(false);
   const [debounceTimeout, setDebounceTimeout] = useState(0);
+  const [cartItems, setCartItems] = useState([]);
+  const [token, setToken] = useState(localStorage.getItem("token"));
+
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Fetch products data and store it
   /**
    * Make API call to get the products list and store it to display the products
@@ -72,13 +75,13 @@ const Products = () => {
    *      "message": "Something went wrong. Check the backend console for more details"
    * }
    */
-  function timeout(delay) {
-    return new Promise((res) => setTimeout(res, delay));
-  }
+  // function timeout(delay) {
+  //   return new Promise((res) => setTimeout(res, delay));
+  // }
 
   const performAPICall = async () => {
     setLoading(true);
-    await timeout(5000);
+    // await timeout(5000);
     const URL = `${config.endpoint}/products`;
     try {
       await axios
@@ -122,19 +125,16 @@ const Products = () => {
     }/products/search?value=${text.toLowerCase()}`;
     try {
       const response = await axios.get(URL);
-
-      if (response.data.length === 0) {
-        setProducts([]);
-        setDataIcon(true);
-      } else {
+      if (response.data) {
         setProducts(response.data);
+      } else {
+        setProducts([]);
       }
     } catch (error) {
       const errorCode = error.response.status;
       if (errorCode === 404) {
         setProducts([]);
-        setDataIcon(true);
-        console.log("Problem while fethcing the products");
+      //  console.log("Problem while fethcing the products");
       } else {
         enqueueSnackbar(
           "Something went wrong. Check the backend console for more details",
@@ -170,6 +170,76 @@ const Products = () => {
   useEffect(() => {
     performAPICall();
   }, []);
+
+  const fetchCart = async (token) => {
+    const URL = `${config.endpoint}/cart`;
+    try {
+      const response = await axios({
+        method: "GET",
+        url: `${URL}`,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+     // console.log(response.data);
+      return response.data;
+    } catch (error) {
+      //console.log(error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      const func = async () => {
+        const data = await fetchCart(token);
+        const cartData = generateCartItemsFrom(data, products);
+        setCartItems(cartData);
+      };
+      func();
+    }
+  }, [products]);
+
+  const isItemInCart = (items, productId) => {
+    return items.findIndex((item) => item.productId === productId) !== -1;
+  };
+
+  const addToCart = async (
+    token,
+    items,
+    qty,
+    productId,
+    productsData,
+    flag = { isAdded: false }
+  ) => {
+    if (token) {
+      if (isItemInCart(items, productId) && flag.isAdded) {
+        enqueueSnackbar(
+          "Item already in cart. Use the cart sidebar to update quantity or remove item.",
+          { variant: "warning" }
+        );
+      } else {
+        try {
+          const URL = `${config.endpoint}/cart`;
+          const response = await axios({
+            method: "POST",
+            url: `${URL}`,
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            data: { productId: productId, qty: qty },
+          });
+          const cartData = generateCartItemsFrom(response.data, productsData);
+          setCartItems(cartData);
+        } catch (error) {
+          enqueueSnackbar("Sorry! cannot add product to the cart");
+        }
+      }
+    } else {
+      enqueueSnackbar("Login to add an item to the Cart", {
+        variant: "warning",
+      });
+    }
+  };
 
   return (
     <div>
@@ -207,31 +277,53 @@ const Products = () => {
         placeholder="Search for items/categories"
         name="search"
       />
-      <Grid container rowSpacing={4} columnSpacing={2}>
-        <Grid item className="product-grid">
-          <Box className="hero">
-            <p className="hero-heading">
-              India’s <span className="hero-highlight">FASTEST DELIVERY</span>{" "}
-              to your door step
-            </p>
-          </Box>
-        </Grid>
-        {noDataIcon && (
-          <div className="searching">
-            <SentimentDissatisfied />
-            <h3>No products found</h3>
-          </div>
-        )}
-        {products.map((product) => (
-          <Grid item xs={6} md={3} key={product._id}>
-            <ProductCard product={product} />{" "}
+      <div className="container">
+        <Grid container rowSpacing={4} columnSpacing={2}>
+          <Grid item className="product-grid">
+            <Box className="hero">
+              <p className="hero-heading">
+                India’s <span className="hero-highlight">FASTEST DELIVERY</span>{" "}
+                to your door step
+              </p>
+            </Box>
           </Grid>
-        ))}
-      </Grid>
-      <div className="loading">
-        {isLoading && <CircularProgress />}
-        {isLoading && <h3>Loading Products...</h3>}
+          {!products.length && (
+            <div className="searching">
+              <SentimentDissatisfied />
+              <h3>No products found</h3>
+            </div>
+          )}
+          {products.map((product) => (
+            <Grid item xs={6} md={3} key={product._id}>
+              <ProductCard
+                product={product}
+                handleAddToCart={() => {
+                  addToCart(token, cartItems, 1, product._id, products, {
+                    isAdded: true,
+                  });
+                }}
+              />
+            </Grid>
+          ))}
+        </Grid>
+
+        {localStorage.getItem("username") && (
+          <Box className="cart-box" sx={{ backgroundColor: "#E9F5E1" }}>
+            <Cart
+              products={products}
+              items={cartItems}
+              handleQuantity={addToCart}
+            />
+          </Box>
+        )}
       </div>
+      {isLoading && (
+        <div className="loading">
+          <CircularProgress />
+          <h3>Loading Products...</h3>
+        </div>
+      )}
+
       <Footer />
     </div>
   );

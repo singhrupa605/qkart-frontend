@@ -10,8 +10,10 @@ import {
 } from "@mui/material";
 import React from "react";
 import "./ProductCard.css";
+import axios from "axios";
 
-const ProductCard = ({ product, handleAddToCart }) => {
+const ProductCard = ({ product, handleAddToCart }) =>
+ {
   return (
     <Card className="card" id={product._id} category={product.category}>
       <CardMedia alt={product.name} component="img" image={product.image} />

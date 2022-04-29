@@ -13,7 +13,7 @@ import "./Cart.css";
 // Definition of Data Structures used
 /**
  * @typedef {Object} Product - Data on product available to buy
- * 
+ *
  * @property {string} name - The name or title of the product
  * @property {string} category - The category that the product belongs to
  * @property {number} cost - The price to buy the product
@@ -24,7 +24,7 @@ import "./Cart.css";
 
 /**
  * @typedef {Object} CartItem -  - Data on product added to cart
- * 
+ *
  * @property {string} name - The name or title of the product in cart
  * @property {string} qty - The quantity of product added to cart
  * @property {string} category - The category that the product belongs to
@@ -39,7 +39,7 @@ import "./Cart.css";
  *
  * @param { Array.<{ productId: String, qty: Number }> } cartData
  *    Array of objects with productId and quantity of products in cart
- * 
+ *
  * @param { Array.<Product> } productsData
  *    Array of objects with complete data on all available products
  *
@@ -48,6 +48,33 @@ import "./Cart.css";
  *
  */
 export const generateCartItemsFrom = (cartData, productsData) => {
+  let cartItems = [];
+  for (let i = 0; i < cartData.length; i++) {
+    let item = cartData[i];
+    let CartItem = {
+      name: "",
+      qty: "",
+      category: "",
+      cost: 0,
+      rating: 0,
+      image: "",
+      productId: "",
+    };
+    for (let j = 0; j < productsData.length; j++) {
+      let product = productsData[j];
+      if (product._id === item.productId) {
+        CartItem.name = product.name;
+        CartItem.qty = item.qty;
+        CartItem.category = product.category;
+        CartItem.cost = product.cost;
+        CartItem.productId = item.productId;
+        CartItem.rating = product.rating;
+        CartItem.image = product.image;
+      }
+    }
+    cartItems.push(CartItem);
+  }
+  return cartItems;
 };
 
 /**
@@ -61,28 +88,30 @@ export const generateCartItemsFrom = (cartData, productsData) => {
  *
  */
 export const getTotalCartValue = (items = []) => {
+  let totalCost = 0;
+  items.forEach((item) => {
+    const totalItemCost = item.cost * item.qty;
+    totalCost += totalItemCost;
+   // console.log(item.name + " : " + item.productId + " : " + item.qty);
+  });
+  return totalCost;
 };
-
 
 /**
  * Component to display the current quantity for a product and + and - buttons to update product quantity on cart
- * 
+ *
  * @param {Number} value
  *    Current quantity of product in cart
- * 
+ *
  * @param {Function} handleAdd
  *    Handler function which adds 1 more of a product to cart
- * 
+ *
  * @param {Function} handleDelete
  *    Handler function which reduces the quantity of a product in cart by 1
- * 
- * 
+ *
+ *
  */
-const ItemQuantity = ({
-  value,
-  handleAdd,
-  handleDelete,
-}) => {
+const ItemQuantity = ({ value, handleAdd, handleDelete }) => {
   return (
     <Stack direction="row" alignItems="center">
       <IconButton size="small" color="primary" onClick={handleDelete}>
@@ -100,23 +129,20 @@ const ItemQuantity = ({
 
 /**
  * Component to display the Cart view
- * 
+ *
  * @param { Array.<Product> } products
  *    Array of objects with complete data of all available products
- * 
+ *
  * @param { Array.<Product> } items
  *    Array of objects with complete data on products in cart
- * 
- * @param {Function} handleDelete
+ *
+ * @param {Function} handleQuantity
  *    Current quantity of product in cart
- * 
- * 
+ *
+ *
  */
-const Cart = ({
-  products,
-  items = [],
-  handleQuantity,
-}) => {
+const Cart = ({ products, items = [], handleQuantity }) => {
+  const history = useHistory();
 
   if (!items.length) {
     return (
@@ -133,6 +159,62 @@ const Cart = ({
     <>
       <Box className="cart">
         {/* TODO: CRIO_TASK_MODULE_CART - Display view for each cart item with non-zero quantity */}
+        {items.map((item) => (
+          <Box key={item.productId}>
+            {item.qty > 0 ? (
+              <Box display="flex" alignItems="flex-start" padding="1rem">
+                <Box className="image-container">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    width="100%"
+                    height="100%"
+                  />
+                </Box>
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="space-between"
+                  height="6rem"
+                  paddingX="1rem"
+                >
+                  <div>{item.name}</div>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
+                    <ItemQuantity
+                      handleAdd={() =>
+                        handleQuantity(
+                          localStorage.getItem("token"),
+                          items,
+                          item.qty + 1,
+                          item.productId,
+                          products
+                        )
+                      }
+                      handleDelete={() =>
+                        handleQuantity(
+                          localStorage.getItem("token"),
+                          items,
+                          item.qty - 1,
+                          item.productId,
+                          products
+                        )
+                      }
+                      value={item.qty}
+                    />
+                    <Box padding="0.5rem" fontWeight="700">
+                      ${item.cost}
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+            ) : null}
+          </Box>
+        ))}
+
         <Box
           padding="1rem"
           display="flex"
@@ -159,6 +241,9 @@ const Cart = ({
             variant="contained"
             startIcon={<ShoppingCart />}
             className="checkout-btn"
+            onClick={() => {
+              history.push("/checkout", { from: "/" });
+            }}
           >
             Checkout
           </Button>
