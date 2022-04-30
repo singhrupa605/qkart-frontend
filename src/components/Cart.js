@@ -138,12 +138,23 @@ const ItemQuantity = ({ value, handleAdd, handleDelete }) => {
  *
  * @param {Function} handleQuantity
  *    Current quantity of product in cart
- *
+ * 
+ * 
+ *  @param {Boolean} isReadOnly
+ *    If product quantity on cart is to be displayed as read only without the + - options to change quantity
  *
  */
-const Cart = ({ products, items = [], handleQuantity }) => {
-  const history = useHistory();
 
+ 
+const Cart = ({
+  products,
+  items = [],
+  handleQuantity,
+}) => {
+
+
+  const history = useHistory();
+ 
   if (!items.length) {
     return (
       <Box className="cart empty">
