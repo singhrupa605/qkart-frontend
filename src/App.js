@@ -7,7 +7,7 @@ import Products from "./components/Products";
 import Thanks from "./components/Thanks";
 
 export const config = {
-  endpoint: `http://${ipConfig.workspaceIp}:8082/api/v1`,
+  endpoint: `https://rupa-qkart-project.herokuapp.com/api/v1`,
 };
 
 function App() {

@@ -134,7 +134,7 @@ const Products = () => {
       const errorCode = error.response.status;
       if (errorCode === 404) {
         setProducts([]);
-      //  console.log("Problem while fethcing the products");
+        //  console.log("Problem while fethcing the products");
       } else {
         enqueueSnackbar(
           "Something went wrong. Check the backend console for more details",
@@ -179,7 +179,7 @@ const Products = () => {
         url: `${URL}`,
         headers: { Authorization: `Bearer ${token}` },
       });
-     // console.log(response.data);
+      // console.log(response.data);
       return response.data;
     } catch (error) {
       //console.log(error);
