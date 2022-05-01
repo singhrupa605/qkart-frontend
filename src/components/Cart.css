@@ -38,3 +38,20 @@
     align-items: center;
     justify-content: space-between;
 }
+
+.order-detail-box
+{
+    padding : 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.order-detail
+{
+    color:"#3C3C3C";
+   font-weight: 400;
+   align-self:"center";
+   padding-left: 1rem;
+   padding-right: 1rem;
+}

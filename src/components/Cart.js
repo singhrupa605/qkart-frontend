@@ -92,7 +92,7 @@ export const getTotalCartValue = (items = []) => {
   items.forEach((item) => {
     const totalItemCost = item.cost * item.qty;
     totalCost += totalItemCost;
-   // console.log(item.name + " : " + item.productId + " : " + item.qty);
+    // console.log(item.name + " : " + item.productId + " : " + item.qty);
   });
   return totalCost;
 };
@@ -111,18 +111,29 @@ export const getTotalCartValue = (items = []) => {
  *
  *
  */
-const ItemQuantity = ({ value, handleAdd, handleDelete }) => {
+const ItemQuantity = ({ value, handleAdd, handleDelete, isReadOnly }) => {
   return (
-    <Stack direction="row" alignItems="center">
-      <IconButton size="small" color="primary" onClick={handleDelete}>
-        <RemoveOutlined />
-      </IconButton>
-      <Box padding="0.5rem" data-testid="item-qty">
-        {value}
-      </Box>
-      <IconButton size="small" color="primary" onClick={handleAdd}>
-        <AddOutlined />
-      </IconButton>
+    <Stack>
+      {isReadOnly ? (
+        <Stack direction="row" alignItems="center">
+          <Box padding="0.5rem" fontWeight="400">
+            {" "}
+            Qty: {value}
+          </Box>
+        </Stack>
+      ) : (
+        <Stack direction="row" alignItems="center">
+          <IconButton size="small" color="primary" onClick={handleDelete}>
+            <RemoveOutlined />
+          </IconButton>
+          <Box padding="0.5rem" data-testid="item-qty">
+            {value}
+          </Box>
+          <IconButton size="small" color="primary" onClick={handleAdd}>
+            <AddOutlined />
+          </IconButton>
+        </Stack>
+      )}
     </Stack>
   );
 };
@@ -138,23 +149,24 @@ const ItemQuantity = ({ value, handleAdd, handleDelete }) => {
  *
  * @param {Function} handleQuantity
  *    Current quantity of product in cart
- * 
- * 
+ *
+ *
  *  @param {Boolean} isReadOnly
  *    If product quantity on cart is to be displayed as read only without the + - options to change quantity
  *
  */
 
- 
-const Cart = ({
-  products,
-  items = [],
-  handleQuantity,
-}) => {
-
-
+const Cart = ({ products, items = [], handleQuantity, isReadOnly }) => {
   const history = useHistory();
- 
+
+  const getTotalItems = (items) => {
+    let totalItems = 0;
+    items.forEach((item) => {
+      totalItems += item.qty;
+    });
+    return totalItems;
+  };
+
   if (!items.length) {
     return (
       <Box className="cart empty">
@@ -168,97 +180,151 @@ const Cart = ({
 
   return (
     <>
-      <Box className="cart">
-        {/* TODO: CRIO_TASK_MODULE_CART - Display view for each cart item with non-zero quantity */}
-        {items.map((item) => (
-          <Box key={item.productId}>
-            {item.qty > 0 ? (
-              <Box display="flex" alignItems="flex-start" padding="1rem">
-                <Box className="image-container">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    width="100%"
-                    height="100%"
-                  />
-                </Box>
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  justifyContent="space-between"
-                  height="6rem"
-                  paddingX="1rem"
-                >
-                  <div>{item.name}</div>
+      <Box>
+        <Box className="cart">
+          {/* TODO: CRIO_TASK_MODULE_CART - Display view for each cart item with non-zero quantity */}
+          {items.map((item) => (
+            <Box key={item.productId}>
+              {item.qty > 0 ? (
+                <Box display="flex" alignItems="flex-start" padding="1rem">
+                  <Box className="image-container">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      width="100%"
+                      height="100%"
+                    />
+                  </Box>
                   <Box
                     display="flex"
+                    flexDirection="column"
                     justifyContent="space-between"
-                    alignItems="center"
+                    height="6rem"
+                    paddingX="1rem"
                   >
-                    <ItemQuantity
-                      handleAdd={() =>
-                        handleQuantity(
-                          localStorage.getItem("token"),
-                          items,
-                          item.qty + 1,
-                          item.productId,
-                          products
-                        )
-                      }
-                      handleDelete={() =>
-                        handleQuantity(
-                          localStorage.getItem("token"),
-                          items,
-                          item.qty - 1,
-                          item.productId,
-                          products
-                        )
-                      }
-                      value={item.qty}
-                    />
-                    <Box padding="0.5rem" fontWeight="700">
-                      ${item.cost}
+                    <div>{item.name}</div>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <ItemQuantity
+                        handleAdd={() =>
+                          handleQuantity(
+                            localStorage.getItem("token"),
+                            items,
+                            item.qty + 1,
+                            item.productId,
+                            products
+                          )
+                        }
+                        handleDelete={() =>
+                          handleQuantity(
+                            localStorage.getItem("token"),
+                            items,
+                            item.qty - 1,
+                            item.productId,
+                            products
+                          )
+                        }
+                        value={item.qty}
+                        isReadOnly={isReadOnly}
+                      />
+                      <Box padding="0.5rem" fontWeight="700">
+                        ${item.cost}
+                      </Box>
                     </Box>
                   </Box>
                 </Box>
-              </Box>
-            ) : null}
-          </Box>
-        ))}
+              ) : null}
+            </Box>
+          ))}
 
-        <Box
-          padding="1rem"
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Box color="#3C3C3C" alignSelf="center">
-            Order total
-          </Box>
           <Box
-            color="#3C3C3C"
-            fontWeight="700"
-            fontSize="1.5rem"
-            alignSelf="center"
-            data-testid="cart-total"
+            padding="1rem"
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
           >
-            ${getTotalCartValue(items)}
+            <Box
+              color="#3C3C3C"
+              alignSelf="center"
+              fontWeight="600"
+              fontSize="1.1rem"
+            >
+              Order total
+            </Box>
+            <Box
+              color="#3C3C3C"
+              fontWeight="700"
+              fontSize="1.5rem"
+              alignSelf="center"
+              data-testid="cart-total"
+            >
+              ${getTotalCartValue(items)}
+            </Box>
+          </Box>
+
+          <Box display="flex" justifyContent="flex-end" className="cart-footer">
+            {!isReadOnly && (
+              <Button
+                color="primary"
+                variant="contained"
+                startIcon={<ShoppingCart />}
+                className="checkout-btn"
+                onClick={() => {
+                  history.push("/checkout", { from: "/" });
+                }}
+              >
+                Checkout
+              </Button>
+            )}
           </Box>
         </Box>
 
-        <Box display="flex" justifyContent="flex-end" className="cart-footer">
-          <Button
-            color="primary"
-            variant="contained"
-            startIcon={<ShoppingCart />}
-            className="checkout-btn"
-            onClick={() => {
-              history.push("/checkout", { from: "/" });
-            }}
-          >
-            Checkout
-          </Button>
-        </Box>
+        {isReadOnly && (
+          <Box className="cart">
+            <Box
+              fontWeight="700"
+              fontSize="1.5rem"
+              alignSelf="center"
+              padding="1rem"
+            >
+              {" "}
+              Order Details
+            </Box>
+            <Box className="order-detail-box">
+              <Box className="order-detail">Products</Box>
+              <Box className="order-detail">{getTotalItems(items)}</Box>
+            </Box>
+            <Box className="order-detail-box">
+              <Box className="order-detail">Subtotal</Box>
+              <Box className="order-detail">${getTotalCartValue(items)}</Box>
+            </Box>
+            <Box className="order-detail-box">
+              <Box className="order-detail">Shipping Charges</Box>
+              <Box className="order-detail">$0</Box>
+            </Box>
+            <Box className="order-detail-box">
+              <Box
+                className="order-detail"
+                color="#3C3C3C"
+                fontWeight="800"
+                fontSize="1.3rem"
+              >
+                Total
+              </Box>
+              <Box
+                className="order-detail"
+                color="#3C3C3C"
+                fontWeight="800"
+                fontSize="1.2rem"
+              >
+                ${getTotalCartValue(items)}
+              </Box>
+            </Box>
+          </Box>
+        )}
       </Box>
     </>
   );
